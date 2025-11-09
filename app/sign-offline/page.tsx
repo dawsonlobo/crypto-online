@@ -43,7 +43,7 @@ export default function SignOfflinePage() {
   const [sendingAddress, setSendingAddress] = useState("");
   const [countdown, setCountdown] = useState(60);
   const [balance, setBalance] = useState<string>("");
-  const [transactionData, setransactionData] = useState<string>("");
+  const [transactionData, setTransactionData] = useState<string>("");
   const [fees, setFees] = useState<string>("Calculating...");
 
   useEffect(() => {
@@ -135,7 +135,7 @@ export default function SignOfflinePage() {
         wallet.public_address,
         parseFloat(sendAmount)
       );
-      setransactionData(transactionData);
+      setTransactionData(transactionData);
     } catch (error) {
       console.error("Error fetching balance:", error);
       setBalance("Error loading balance");
@@ -441,8 +441,12 @@ export default function SignOfflinePage() {
                   <Scanner
                     onScan={(result) => {
                       if (result?.[0]?.rawValue) {
+
+                        // todo: call function to check all input values and then proceed next
+
                         console.log("Scanned:", result[0].rawValue);
                         // Optionally delay before summary for animation smoothness
+
                         setTimeout(() => setCurrentStep("summary"), 500);
                       }
                     }}
