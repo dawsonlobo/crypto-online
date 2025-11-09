@@ -384,7 +384,7 @@ const updateTransactionData = async () => {
               onClick={(e) => e.stopPropagation()}
               className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full relative"
             >
-              <Button
+              <Button 
                 variant="ghost"
                 size="icon"
                 className="absolute top-4 right-4"
