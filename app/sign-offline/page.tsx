@@ -4,19 +4,14 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
-import {
-  QrCode,
-  Camera,
-  CheckCircle,
-  X,
-  RefreshCw,
-} from "lucide-react";
+import { QrCode, Camera, CheckCircle, X, RefreshCw } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Scanner } from "@yudiel/react-qr-scanner";
 import {
   Select,
   SelectContent,
@@ -34,7 +29,7 @@ import {
 } from "@/lib/api-functions";
 import type { Wallet } from "@/lib/api-functions";
 
-type Step = null | "qr" | "upload" | "summary";
+type Step = null | "qr" | "upload" | "scanQR" | "summary";
 
 export default function SignOfflinePage() {
   const router = useRouter();
@@ -71,13 +66,13 @@ export default function SignOfflinePage() {
   useEffect(() => {
     if (currentStep === "qr" && countdown > 0) {
       if (countdown === 60) {
-            updateTransactionData()
+        updateTransactionData();
       }
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
       return () => clearTimeout(timer);
-    }else if (countdown === 0) {
-        setCountdown(60)
-      }
+    } else if (countdown === 0) {
+      setCountdown(60);
+    }
   }, [currentStep, countdown]);
 
   const checkUser = async () => {
@@ -120,27 +115,27 @@ export default function SignOfflinePage() {
         wallet.crypto_type
       );
       setBalance(
-        `${balanceInfo.crypto} ${wallet.crypto_type} ≈ ₹${balanceInfo.fiat.toLocaleString()}`
+        `${balanceInfo.crypto} ${
+          wallet.crypto_type
+        } ≈ ₹${balanceInfo.fiat.toLocaleString()}`
       );
     } catch (error) {
       console.error("Error fetching balance:", error);
       setBalance("Error loading balance");
     }
   };
-const updateTransactionData = async () => {
+  const updateTransactionData = async () => {
     const wallet = wallets.find((w) => w.id === selectedWallet);
     if (!wallet) return;
 
     try {
       const transactionData = await generateTransactionQRData(
-      wallet.crypto_type,
-      sendingAddress,
-      wallet.public_address,
-      parseFloat(sendAmount)
-    );
-      setransactionData(
-        transactionData
+        wallet.crypto_type,
+        sendingAddress,
+        wallet.public_address,
+        parseFloat(sendAmount)
       );
+      setransactionData(transactionData);
     } catch (error) {
       console.error("Error fetching balance:", error);
       setBalance("Error loading balance");
@@ -159,7 +154,9 @@ const updateTransactionData = async () => {
         parseFloat(sendAmount)
       );
       setFees(
-        `${feeInfo.feeCrypto} ${wallet.crypto_type} ≈ $${feeInfo.feeFiat.toFixed(2)}`
+        `${feeInfo.feeCrypto} ${
+          wallet.crypto_type
+        } ≈ $${feeInfo.feeFiat.toFixed(2)}`
       );
     } catch (error) {
       console.error("Error calculating fees:", error);
@@ -177,7 +174,8 @@ const updateTransactionData = async () => {
   };
 
   const handleUploadSign = () => {
-    setCurrentStep("summary");
+    // setCurrentStep("summary"); -old code
+    setCurrentStep("scanQR");
   };
 
   const handleCloseModal = () => {
@@ -198,10 +196,10 @@ const updateTransactionData = async () => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
-  const getQRData = async() => {
+  const getQRData = async () => {
     const wallet = getCurrentWallet();
     if (!wallet) return "";
-    return transactionData
+    return transactionData;
     // return "abc"
   };
 
@@ -225,7 +223,8 @@ const updateTransactionData = async () => {
                 <SelectContent>
                   {wallets.map((wallet) => (
                     <SelectItem key={wallet.id} value={wallet.id}>
-                      {wallet.crypto_type} - {truncateAddress(wallet.public_address)}
+                      {wallet.crypto_type} -{" "}
+                      {truncateAddress(wallet.public_address)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -255,7 +254,9 @@ const updateTransactionData = async () => {
                 />
                 <Select
                   value={amountUnit}
-                  onValueChange={(value: "crypto" | "fiat") => setAmountUnit(value)}
+                  onValueChange={(value: "crypto" | "fiat") =>
+                    setAmountUnit(value)
+                  }
                 >
                   <SelectTrigger className="w-32">
                     <SelectValue />
@@ -286,9 +287,7 @@ const updateTransactionData = async () => {
               </div>
             </div>
 
-            <p className="text-sm text-gray-600">
-              Fees: {fees}
-            </p>
+            <p className="text-sm text-gray-600">Fees: {fees}</p>
 
             <Button
               onClick={handleGenerateQR}
@@ -332,11 +331,7 @@ const updateTransactionData = async () => {
 
               <div className="flex flex-col items-center gap-6">
                 <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
-                  <QRCodeSVG
-                    value={transactionData}
-                    size={200}
-                    level="H"
-                  />
+                  <QRCodeSVG value={transactionData} size={200} level="H" />
                 </div>
 
                 <div className="text-center">
@@ -384,7 +379,7 @@ const updateTransactionData = async () => {
               onClick={(e) => e.stopPropagation()}
               className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full relative"
             >
-              <Button 
+              <Button
                 variant="ghost"
                 size="icon"
                 className="absolute top-4 right-4"
@@ -409,6 +404,60 @@ const updateTransactionData = async () => {
                 >
                   Upload Sign
                 </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+        {currentStep === "scanQR" && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+            onClick={handleCloseModal}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full relative"
+            >
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-4 right-4"
+                onClick={handleCloseModal}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+
+              <h3 className="text-2xl font-semibold text-center mb-6">
+                Scan QR Code
+              </h3>
+
+              <div className="flex flex-col items-center gap-6">
+                <div className="rounded-xl overflow-hidden border-2 border-dashed border-gray-300">
+                  <Scanner
+                    onScan={(result) => {
+                      if (result?.[0]?.rawValue) {
+                        console.log("Scanned:", result[0].rawValue);
+                        // Optionally delay before summary for animation smoothness
+                        setTimeout(() => setCurrentStep("summary"), 500);
+                      }
+                    }}
+                    onError={(error) => console.error(error)}
+                    constraints={{ facingMode: "environment" }}
+                    classNames={{
+                      container: "w-[300px] h-[300px]",
+                      video: "object-cover rounded-lg",
+                    }}
+                  />
+                </div>
+
+                <p className="text-gray-500 text-sm text-center">
+                  Align the QR code inside the frame
+                </p>
               </div>
             </motion.div>
           </motion.div>
