@@ -28,6 +28,7 @@ import {
   generateTransactionQRData,
 } from "@/lib/api-functions";
 import type { Wallet } from "@/lib/api-functions";
+import { uploadTransaction } from "@/lib/crypto/sol";
 
 type Step = null | "qr" | "upload" | "scanQR" | "summary";
 
@@ -131,11 +132,64 @@ export default function SignOfflinePage() {
     try {
       const transactionData = await generateTransactionQRData(
         wallet.crypto_type,
-        sendingAddress,
         wallet.public_address,
+        sendingAddress,
         parseFloat(sendAmount)
       );
       setTransactionData(transactionData);
+    } catch (error) {
+      console.error("Error fetching balance:", error);
+      setBalance("Error loading balance");
+    }
+  };
+
+  const handlePreSignConfirmation = async (qrData: string) => {
+    const wallet = wallets.find((w) => w.id === selectedWallet);
+    if (!wallet) return;
+
+    try {
+      // parse string to json
+
+      const txData = JSON.parse(qrData);
+      // check if all value exists
+
+      if (
+        !txData?.senderAddress ||
+        !txData?.receiverAddress ||
+        !txData?.amount ||
+        !txData?.expiry ||
+        !txData?.blockhash ||
+        !txData?.signedTx
+      ) {
+        alert("Invalid QR code. please scan again");
+        return;
+      }
+
+
+      // todo: check if matches transaction
+
+      // if matches then upload transaction
+
+      const result = await uploadTransaction(txData?.signedTx)
+
+
+      if (!result) {
+        alert("Error when sending transaction");
+        return;
+      }
+
+      setCurrentStep("summary")
+      
+
+      // if success then goto summary
+
+      // const transactionData = await generateTransactionQRData(
+      //   wallet.crypto_type,
+      //   sendingAddress,
+      //   wallet.public_address,
+      //   parseFloat(sendAmount)
+      // );
+      // setTransactionData(transactionData);
     } catch (error) {
       console.error("Error fetching balance:", error);
       setBalance("Error loading balance");
@@ -441,13 +495,14 @@ export default function SignOfflinePage() {
                   <Scanner
                     onScan={(result) => {
                       if (result?.[0]?.rawValue) {
-
                         // todo: call function to check all input values and then proceed next
 
                         console.log("Scanned:", result[0].rawValue);
                         // Optionally delay before summary for animation smoothness
 
-                        setTimeout(() => setCurrentStep("summary"), 500);
+                        handlePreSignConfirmation(result[0].rawValue);
+
+                        // setTimeout(() => setCurrentStep("summary"), 500);
                       }
                     }}
                     onError={(error) => console.error(error)}

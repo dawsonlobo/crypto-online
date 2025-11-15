@@ -41,7 +41,7 @@ export async function generateTransactionOnline(
     if (!blockhash) {
       throw new Error("Failed to fetch blockhash");
     }
-    
+
     return {
       senderAddress,
       receiverAddress,
@@ -51,8 +51,38 @@ export async function generateTransactionOnline(
     };
   } catch (error) {
     return {
-        message: `Error generateTransactionOnline:${error}`
-    }
+      message: `Error generateTransactionOnline:${error}`,
+    };
     // console.error("Error generateTransactionOnline:", error);
+  }
+}
+
+export async function uploadTransaction(signedTx: string) {
+  try {
+    const rpcUrl = process.argv[2] || "https://api.devnet.solana.com";
+    const connection = new Connection(rpcUrl, "confirmed");
+
+    // const txBuffer = Buffer.from(signedTx, "base64");
+    const binaryString = atob(signedTx);
+    const txBuffer = Uint8Array.from(binaryString, (c) => c.charCodeAt(0));
+
+    // sendRawTransaction
+    const signature = await connection.sendRawTransaction(txBuffer);
+    console.log("Transaction submitted. Signature:", signature);
+
+    // Optionally wait for confirmation
+    const conf = await connection.confirmTransaction(signature, "confirmed");
+const txInfo = await connection.getTransaction(signature, {
+  commitment: "confirmed",
+  maxSupportedTransactionVersion: 0
+});
+
+console.log("Confirmation result:", conf);
+console.log("txInfo result:", txInfo);
+
+    return true;
+  } catch (error) {
+    console.log(error);
+    return false;
   }
 }
