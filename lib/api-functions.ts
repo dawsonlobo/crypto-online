@@ -76,13 +76,14 @@ export async function getAvailableBalance(
 export async function   convertCryptoToFiat(
   amount: number,
   cryptoType: string,
-  fiatCurrency: string
+  fiatCurrency: string,
+  reverseFiatToCrypto?:boolean
 ): Promise<number> {
   // Placeholder implementation
   await new Promise((resolve) => setTimeout(resolve, 50));
 
 
-  const rate = await convertSolToFiat(amount);
+  const rate = await convertSolToFiat(amount, reverseFiatToCrypto);
   return rate;
 }
 

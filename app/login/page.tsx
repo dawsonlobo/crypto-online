@@ -28,13 +28,6 @@ export default function LoginPage() {
         password,
       });
 
-      console.log("data");
-      console.log(data);
-
-      console.log("error");
-      console.log(error);
-      
-
       if (error) throw error;
 
       toast({

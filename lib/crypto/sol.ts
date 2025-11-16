@@ -22,7 +22,6 @@ export async function getBalance(publicAddress: string) {
 
     return balanceSOL;
 
-    // console.log(`💰 Balance for ${publicKey.toBase58()} = ${balanceSOL} SOL`);
   } catch (error) {
     console.error("Error fetching balance:", error);
   }
@@ -88,7 +87,7 @@ export async function uploadTransaction(signedTx: string) {
   }
 }
 
-export async function convertSolToFiat(coinAmount: number) {
+export async function convertSolToFiat(coinAmount: number, reverseFiatToCrypto?:boolean) {
   try {
     // use api to convert to usd
 
@@ -118,8 +117,10 @@ export async function convertSolToFiat(coinAmount: number) {
 
     }
 
+    const convertedValue = reverseFiatToCrypto?Math.round((coinAmount/usdToInr?.rates?.INR/Number(sol?.price)*100))/100:Math.round(coinAmount*sol?.price*usdToInr?.rates?.INR*100)/100;
 
-    return coinAmount*sol?.price*usdToInr?.rates?.INR;
+
+    return convertedValue;
 
   } catch (err) {
     console.log("Error ", err);

@@ -4,7 +4,15 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
-import { QrCode, Camera, CheckCircle, X, RefreshCw } from "lucide-react";
+import {
+  QrCode,
+  Camera,
+  CheckCircle,
+  X,
+  RefreshCw,
+  AlertCircle,
+  AlertTriangle,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
@@ -29,8 +37,9 @@ import {
 } from "@/lib/api-functions";
 import type { Wallet } from "@/lib/api-functions";
 import { uploadTransaction } from "@/lib/crypto/sol";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-type Step = null | "qr" | "upload" | "scanQR" | "summary";
+type Step = null | "qr" | "scanSenderAddress" | "upload" | "scanQR" | "summary";
 
 export default function SignOfflinePage() {
   const router = useRouter();
@@ -46,6 +55,20 @@ export default function SignOfflinePage() {
   const [balance, setBalance] = useState<string>("");
   const [transactionData, setTransactionData] = useState<string>("");
   const [fees, setFees] = useState<string>("Calculating...");
+  const [sendCoversion, setSendCoversion] = useState<string>("Calculating...");
+  const [error, setError] = useState("");
+  const [cryptoBalance, setCryptoBalance] = useState(0);
+  const [alertM, setAlert] = useState<{
+    show: boolean;
+    title: string;
+    message: string;
+    type: "default" | "destructive";
+  }>({
+    show: false,
+    title: "",
+    message: "",
+    type: "default",
+  });
 
   useEffect(() => {
     checkUser();
@@ -56,6 +79,69 @@ export default function SignOfflinePage() {
       loadWalletData();
     }
   }, [userId]);
+
+  useEffect(() => {
+    updateSendConversion();
+    // If INR convert to SOL and vice versa
+  }, [sendAmount]);
+
+  function showAlert(
+    title: string,
+    message: string,
+    type: "default" | "destructive" = "default"
+  ) {
+    setAlert({ show: true, title, message, type });
+
+    setTimeout(() => {
+      setAlert((prev) => ({ ...prev, show: false }));
+    }, 3000);
+  }
+
+  async function updateSendConversion() {
+    // fetch the dropdown if SOL or INR
+    if (amountUnit === "crypto") {
+      const amount = await convertCryptoToFiat(
+        Number(sendAmount),
+        getCurrentWallet()?.crypto_type || "",
+        "INR"
+      );
+
+      // convert SOL to INR
+      setSendCoversion(`₹ ${amount}`);
+    } else {
+      const amount = await convertCryptoToFiat(
+        Number(sendAmount),
+        getCurrentWallet()?.crypto_type || "",
+        "INR",
+        true
+      );
+
+      setSendCoversion(`${amount} ${getCurrentWallet()?.crypto_type}`);
+    }
+  }
+
+  function handleAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value;
+
+    // Allow empty or valid number
+    if (value === "") {
+      setSendAmount("");
+      setError("");
+      return;
+    }
+
+    const num = Number(value);
+
+    // If more than 10 — block update, show error
+    if (num > cryptoBalance) {
+      setError(`Max allowed is ${cryptoBalance}`);
+      return; // DO NOT update sendAmount
+    }
+
+    // valid input
+    setError("");
+    setSendAmount(value);
+  }
 
   useEffect(() => {
     if (selectedWallet) {
@@ -115,6 +201,7 @@ export default function SignOfflinePage() {
         wallet.public_address,
         wallet.crypto_type
       );
+      setCryptoBalance(balanceInfo.crypto);
       setBalance(
         `${balanceInfo.crypto} ${
           wallet.crypto_type
@@ -143,6 +230,11 @@ export default function SignOfflinePage() {
     }
   };
 
+  const handleFillSenderAddress = (senderAddress: string) => {
+    setCurrentStep(null);
+    setSendingAddress(senderAddress);
+  };
+
   const handlePreSignConfirmation = async (qrData: string) => {
     const wallet = wallets.find((w) => w.id === selectedWallet);
     if (!wallet) return;
@@ -165,21 +257,18 @@ export default function SignOfflinePage() {
         return;
       }
 
-
       // todo: check if matches transaction
 
       // if matches then upload transaction
 
-      const result = await uploadTransaction(txData?.signedTx)
-
+      const result = await uploadTransaction(txData?.signedTx);
 
       if (!result) {
         alert("Error when sending transaction");
         return;
       }
 
-      setCurrentStep("summary")
-      
+      setCurrentStep("summary");
 
       // if success then goto summary
 
@@ -219,12 +308,38 @@ export default function SignOfflinePage() {
   };
 
   const handleGenerateQR = () => {
+    if (!selectedWallet) {
+      showAlert("Missing Wallet", "Please select a wallet.", "destructive");
+      return;
+    }
+
+    if (!sendAmount || Number(sendAmount) <= 0) {
+      showAlert(
+        "Invalid Amount",
+        "Please enter a valid amount.",
+        "destructive"
+      );
+      return;
+    }
+
+    if (!sendingAddress) {
+      showAlert(
+        "Missing Address",
+        "Recipient address is required.",
+        "destructive"
+      );
+      return;
+    }
     setCurrentStep("qr");
     setCountdown(60);
   };
 
   const handleProceedToUpload = () => {
     setCurrentStep("upload");
+  };
+
+  const handleScanSenderAddress = () => {
+    setCurrentStep("scanSenderAddress");
   };
 
   const handleUploadSign = () => {
@@ -262,6 +377,17 @@ export default function SignOfflinePage() {
       <Sidebar />
 
       <main className="flex-1 p-8 overflow-auto">
+        {alertM.show && (
+  <div className="fixed top-4 right-4 z-50 w-80 animate-in fade-in slide-in-from-top-2">
+    <Alert
+      variant={alertM.type}
+      className="bg-white text-gray-900 border-gray-200 shadow-lg"
+    >
+      <AlertTitle>{alertM.title}</AlertTitle>
+      <AlertDescription>{alertM.message}</AlertDescription>
+    </Alert>
+  </div>
+)}
         <Card className="max-w-2xl mx-auto p-8 shadow-sm rounded-2xl">
           <h2 className="text-3xl font-semibold text-gray-900 mb-8">
             Sign Offline
@@ -303,7 +429,7 @@ export default function SignOfflinePage() {
                   type="number"
                   step="0.001"
                   value={sendAmount}
-                  onChange={(e) => setSendAmount(e.target.value)}
+                  onChange={handleAmountChange}
                   className="flex-1"
                 />
                 <Select
@@ -324,9 +450,9 @@ export default function SignOfflinePage() {
                 </Select>
               </div>
             </div>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
 
-                        <p className="text-sm text-gray-600">Fees: {fees}</p>
-
+            <p className="text-sm text-gray-600">= {sendCoversion}</p>
 
             <div className="space-y-2">
               <Label htmlFor="address">Sending Address</Label>
@@ -338,7 +464,11 @@ export default function SignOfflinePage() {
                   placeholder="Enter recipient address"
                   className="flex-1"
                 />
-                <Button variant="outline" size="icon">
+                <Button
+                  onClick={handleScanSenderAddress}
+                  variant="outline"
+                  size="icon"
+                >
                   <QrCode className="w-4 h-4" />
                 </Button>
               </div>
@@ -465,6 +595,66 @@ export default function SignOfflinePage() {
             </motion.div>
           </motion.div>
         )}
+
+        {currentStep === "scanSenderAddress" && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+            onClick={handleCloseModal}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full relative"
+            >
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-4 right-4"
+                onClick={handleCloseModal}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+
+              <h3 className="text-2xl font-semibold text-center mb-6">
+                Scan Sender QR Code
+              </h3>
+
+              <div className="flex flex-col items-center gap-6">
+                <div className="rounded-xl overflow-hidden border-2 border-dashed border-gray-300">
+                  <Scanner
+                    onScan={(result) => {
+                      if (result?.[0]?.rawValue) {
+                        // todo: call function to check all input values and then proceed next
+
+                        // Optionally delay before summary for animation smoothness
+
+                        handleFillSenderAddress(result[0].rawValue);
+
+                        // setTimeout(() => setCurrentStep("summary"), 500);
+                      }
+                    }}
+                    onError={(error) => console.error(error)}
+                    constraints={{ facingMode: "environment" }}
+                    classNames={{
+                      container: "w-[300px] h-[300px]",
+                      video: "object-cover rounded-lg",
+                    }}
+                  />
+                </div>
+
+                <p className="text-gray-500 text-sm text-center">
+                  Align the QR code inside the frame
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
         {currentStep === "scanQR" && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -500,7 +690,6 @@ export default function SignOfflinePage() {
                       if (result?.[0]?.rawValue) {
                         // todo: call function to check all input values and then proceed next
 
-                        console.log("Scanned:", result[0].rawValue);
                         // Optionally delay before summary for animation smoothness
 
                         handlePreSignConfirmation(result[0].rawValue);
