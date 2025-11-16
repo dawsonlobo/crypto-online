@@ -2,7 +2,7 @@
 // These functions contain placeholder logic marked with //dawson-edit
 // Replace with actual API calls and business logic
 
-import { generateTransactionOnline, getBalance } from "./crypto/sol";
+import { convertSolToFiat, generateTransactionOnline, getBalance } from "./crypto/sol";
 
 export interface Wallet {
   id: string;
@@ -73,7 +73,7 @@ export async function getAvailableBalance(
 
 // Get conversion rate and convert amount
 // dawson-edit: Replace with actual exchange rate API
-export async function convertCryptoToFiat(
+export async function   convertCryptoToFiat(
   amount: number,
   cryptoType: string,
   fiatCurrency: string
@@ -81,16 +81,9 @@ export async function convertCryptoToFiat(
   // Placeholder implementation
   await new Promise((resolve) => setTimeout(resolve, 50));
 
-  // dawson-edit: Implement actual conversion API call
-  // Example: Use CoinGecko, CoinMarketCap, or your preferred service
-  const mockRates: Record<string, number> = {
-    BTC: 8000000, // 1 BTC = 8,000,000 INR
-    ETH: 200000, // 1 ETH = 200,000 INR
-    USDT: 83, // 1 USDT = 83 INR
-  };
 
-  const rate = mockRates[cryptoType] || 0;
-  return amount * rate;
+  const rate = await convertSolToFiat(amount);
+  return rate;
 }
 
 // Convert fiat to crypto

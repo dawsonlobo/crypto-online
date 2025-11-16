@@ -4,6 +4,7 @@ import {
   PublicKey,
   LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
+import { log } from "console";
 
 export async function getBalance(publicAddress: string) {
   try {
@@ -72,17 +73,57 @@ export async function uploadTransaction(signedTx: string) {
 
     // Optionally wait for confirmation
     const conf = await connection.confirmTransaction(signature, "confirmed");
-const txInfo = await connection.getTransaction(signature, {
-  commitment: "confirmed",
-  maxSupportedTransactionVersion: 0
-});
+    const txInfo = await connection.getTransaction(signature, {
+      commitment: "confirmed",
+      maxSupportedTransactionVersion: 0,
+    });
 
-console.log("Confirmation result:", conf);
-console.log("txInfo result:", txInfo);
+    console.log("Confirmation result:", conf);
+    console.log("txInfo result:", txInfo);
 
     return true;
   } catch (error) {
     console.log(error);
     return false;
+  }
+}
+
+export async function convertSolToFiat(coinAmount: number) {
+  try {
+    // use api to convert to usd
+
+    const res = await fetch(
+      "https://data-api.binance.vision/api/v3/ticker/price"
+    );
+
+    const data = await res.json();
+
+    const sol = data.find((a: { symbol: string; })=> a.symbol === "SOLUSDT");
+    console.log(sol)
+    
+    if ( isNaN( Number(sol?.price))  || sol?.price<=0) {
+      // error
+      console.error("Unable to get crypto price")
+      return 0;
+    }
+
+    // convert that usd to inr
+    
+    const usdToInr = await (await fetch("https://api.frankfurter.dev/v1/latest?base=USD&symbols=INR")).json()
+
+    if (typeof usdToInr?.rates?.INR !== "number" ||  usdToInr?.rates?.INR <=0) {
+      // error
+      console.error("Unable to get the currency exchange rate")
+      return 0
+
+    }
+
+
+    return coinAmount*sol?.price*usdToInr?.rates?.INR;
+
+  } catch (err) {
+    console.log("Error ", err);
+
+    return 0;
   }
 }

@@ -325,6 +325,9 @@ export default function SignOfflinePage() {
               </div>
             </div>
 
+                        <p className="text-sm text-gray-600">Fees: {fees}</p>
+
+
             <div className="space-y-2">
               <Label htmlFor="address">Sending Address</Label>
               <div className="flex gap-2">
