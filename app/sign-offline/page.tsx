@@ -38,6 +38,7 @@ import {
 import type { Wallet } from "@/lib/api-functions";
 import { uploadTransaction } from "@/lib/crypto/sol";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useNetwork } from "@/contexts/NetworkContext";
 
 type Step = null | "qr" | "scanSenderAddress" | "upload" | "scanQR" | "summary";
 
@@ -190,16 +191,19 @@ export default function SignOfflinePage() {
       setLoading(false);
     }
   };
+      const { network } = useNetwork();
 
   // dawson-edit: Replace with actual balance fetching
   const updateBalance = async () => {
+    
     const wallet = wallets.find((w) => w.id === selectedWallet);
     if (!wallet) return;
 
     try {
       const balanceInfo = await getAvailableBalance(
         wallet.public_address,
-        wallet.crypto_type
+        wallet.crypto_type,
+        network
       );
       setCryptoBalance(balanceInfo.crypto);
       setBalance(
@@ -261,7 +265,7 @@ export default function SignOfflinePage() {
 
       // if matches then upload transaction
 
-      const result = await uploadTransaction(txData?.signedTx);
+      const result = await uploadTransaction(txData?.signedTx, network);
 
       if (!result) {
         alert("Error when sending transaction");

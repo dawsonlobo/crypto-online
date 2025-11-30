@@ -1,15 +1,29 @@
+import { Network } from "@/contexts/NetworkContext";
 import {
   Connection,
   clusterApiUrl,
   PublicKey,
   LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
-import { log } from "console";
 
-export async function getBalance(publicAddress: string) {
+export async function getBalance(publicAddress: string, network: Network) {
   try {
-    // Connect to Solana Devnet
-    const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+    let connection;
+
+    if (network === "mainnet") {
+      const RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || ""; // your HTTPS endpoint from Chainstack
+      const username = process.env.NEXT_PUBLIC_SOLANA_RPC_USERNAME;
+      const password = process.env.NEXT_PUBLIC_SOLANA_RPC_PASSWORD;
+      const auth = btoa(`${username}:${password}`);
+      connection = new Connection(RPC_URL, {
+        httpHeaders: {
+          Authorization: `Basic ${auth}`,
+        },
+      });
+    } else {
+      // Connect to Solana Devnet
+      connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+    }
 
     // Replace this with your wallet address
     const publicKey = new PublicKey(publicAddress);
@@ -21,7 +35,6 @@ export async function getBalance(publicAddress: string) {
     const balanceSOL = balanceLamports / LAMPORTS_PER_SOL;
 
     return balanceSOL;
-
   } catch (error) {
     console.error("Error fetching balance:", error);
   }
@@ -57,9 +70,12 @@ export async function generateTransactionOnline(
   }
 }
 
-export async function uploadTransaction(signedTx: string) {
+export async function uploadTransaction(signedTx: string, network: Network) {
   try {
-    const rpcUrl = process.argv[2] || "https://api.devnet.solana.com";
+    const rpcUrl =
+      network === "mainnet"
+        ? "https://api.mainnet-beta.solana.com"
+        : "https://api.devnet.solana.com";
     const connection = new Connection(rpcUrl, "confirmed");
 
     // const txBuffer = Buffer.from(signedTx, "base64");
@@ -87,7 +103,10 @@ export async function uploadTransaction(signedTx: string) {
   }
 }
 
-export async function convertSolToFiat(coinAmount: number, reverseFiatToCrypto?:boolean) {
+export async function convertSolToFiat(
+  coinAmount: number,
+  reverseFiatToCrypto?: boolean
+) {
   try {
     // use api to convert to usd
 
@@ -97,31 +116,34 @@ export async function convertSolToFiat(coinAmount: number, reverseFiatToCrypto?:
 
     const data = await res.json();
 
-    const sol = data.find((a: { symbol: string; })=> a.symbol === "SOLUSDT");
-    console.log(sol)
-    
-    if ( isNaN( Number(sol?.price))  || sol?.price<=0) {
+    const sol = data.find((a: { symbol: string }) => a.symbol === "SOLUSDT");
+    console.log(sol);
+
+    if (isNaN(Number(sol?.price)) || sol?.price <= 0) {
       // error
-      console.error("Unable to get crypto price")
+      console.error("Unable to get crypto price");
       return 0;
     }
 
     // convert that usd to inr
-    
-    const usdToInr = await (await fetch("https://api.frankfurter.dev/v1/latest?base=USD&symbols=INR")).json()
 
-    if (typeof usdToInr?.rates?.INR !== "number" ||  usdToInr?.rates?.INR <=0) {
+    const usdToInr = await (
+      await fetch("https://api.frankfurter.dev/v1/latest?base=USD&symbols=INR")
+    ).json();
+
+    if (typeof usdToInr?.rates?.INR !== "number" || usdToInr?.rates?.INR <= 0) {
       // error
-      console.error("Unable to get the currency exchange rate")
-      return 0
-
+      console.error("Unable to get the currency exchange rate");
+      return 0;
     }
 
-    const convertedValue = reverseFiatToCrypto?Math.round((coinAmount/usdToInr?.rates?.INR/Number(sol?.price)*100))/100:Math.round(coinAmount*sol?.price*usdToInr?.rates?.INR*100)/100;
-
+    const convertedValue = reverseFiatToCrypto
+      ? Math.round(
+          (coinAmount / usdToInr?.rates?.INR / Number(sol?.price)) * 100
+        ) / 100
+      : Math.round(coinAmount * sol?.price * usdToInr?.rates?.INR * 100) / 100;
 
     return convertedValue;
-
   } catch (err) {
     console.log("Error ", err);
 

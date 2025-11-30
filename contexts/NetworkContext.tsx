@@ -3,7 +3,7 @@
 
 import { createContext, useContext, useState, ReactNode } from "react";
 
-type Network = "mainnet" | "testnet";
+export type Network = "mainnet" | "testnet";
 
 interface NetworkContextValue {
   network: Network;

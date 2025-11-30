@@ -2,6 +2,7 @@
 // These functions contain placeholder logic marked with //dawson-edit
 // Replace with actual API calls and business logic
 
+import { Network } from "@/contexts/NetworkContext";
 import { convertSolToFiat, generateTransactionOnline, getBalance } from "./crypto/sol";
 
 export interface Wallet {
@@ -48,7 +49,8 @@ export interface AllocationData {
 // dawson-edit: Replace with actual API call to fetch real-time balance
 export async function getAvailableBalance(
   publicAddress: string,
-  cryptoType: string
+  cryptoType: string,
+  network: Network
 ): Promise<BalanceInfo> {
   // Placeholder implementation
   await new Promise((resolve) => setTimeout(resolve, 100));
@@ -61,7 +63,7 @@ export async function getAvailableBalance(
     USDT: 1000,
   };
 
-  const balance = (await getBalance(publicAddress)) || 0;
+  const balance = (await getBalance(publicAddress, network)) || 0;
   const fiatValue = await convertCryptoToFiat(balance, cryptoType, "INR");
 
   return {
@@ -215,6 +217,15 @@ export async function loadWallets(userId: string): Promise<Wallet[]> {
       crypto_type: "SOL",
       network: "Mainnet",
       public_address: "594zAMswE8YQ6vWVM7duj1zoQ9kLBnUtXVf8eN4fZXS2",
+      wallet_name: "Main SOL Wallet",
+      created_at: new Date().toISOString(),
+    },
+    {
+      id: "wallet-3",
+      user_id: userId,
+      crypto_type: "SOL",
+      network: "Mainnet",
+      public_address: "6ugkjdYgaESssyDcabThvs4BZ94X8QeXVsvondR4zKP9",
       wallet_name: "Main SOL Wallet",
       created_at: new Date().toISOString(),
     },
