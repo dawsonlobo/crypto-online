@@ -13,10 +13,16 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+// import network context
+import { useNetwork } from "@/contexts/NetworkContext";
+
 export function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
+
+  // use network context
+  const { network, setNetwork } = useNetwork();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -56,12 +62,39 @@ export function Sidebar() {
               }`}
               onClick={() => router.push(item.path)}
             >
-              <Icon className="w-4 h-4 mr-3" />
+              <Icon className="Fw-4 h-4 mr-3" />
               {item.label}
             </Button>
           );
         })}
       </nav>
+
+      {/* --- Network Toggle Start --- */}
+      <div className="px-2 mb-4">
+        <p className="text-sm font-medium mb-2 text-gray-700">Network</p>
+        <div className="flex bg-gray-200 rounded-lg p-1">
+          <button
+            onClick={() => setNetwork("mainnet")}
+            className={`flex-1 px-3 py-1 rounded-md text-sm transition
+      ${
+        network === "mainnet" ? "bg-white shadow font-medium" : "text-gray-600"
+      }`}
+          >
+            Mainnet
+          </button>
+
+          <button
+            onClick={() => setNetwork("testnet")}
+            className={`flex-1 px-3 py-1 rounded-md text-sm transition
+      ${
+        network === "testnet" ? "bg-white shadow font-medium" : "text-gray-600"
+      }`}
+          >
+            Testnet
+          </button>
+        </div>
+      </div>
+      {/* --- Network Toggle End --- */}
 
       <Button
         variant="ghost"
