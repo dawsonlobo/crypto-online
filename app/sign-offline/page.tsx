@@ -369,13 +369,6 @@ export default function SignOfflinePage() {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
-  const getQRData = async () => {
-    const wallet = getCurrentWallet();
-    if (!wallet) return "";
-    return transactionData;
-    // return "abc"
-  };
-
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar />

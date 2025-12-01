@@ -55,28 +55,46 @@ export async function generateTransactionOnline(
       throw new Error("Failed to fetch blockhash");
     }
 
-    return {
+    console.log({
       senderAddress,
       receiverAddress,
       amount,
       expiry: 1000,
       blockhash,
-    };
+    });
+
+    const response = `${senderAddress?.slice(0, 5)}_${senderAddress?.slice(
+      -5
+    )},${receiverAddress},${amount},${1000},${blockhash}`;
+    console.log("response?.length");
+    console.log(response?.length);
+
+    return response;
   } catch (error) {
-    return {
+    return JSON.stringify({
       message: `Error generateTransactionOnline:${error}`,
-    };
+    });
     // console.error("Error generateTransactionOnline:", error);
   }
 }
 
 export async function uploadTransaction(signedTx: string, network: Network) {
   try {
-    const rpcUrl =
-      network === "mainnet"
-        ? "https://api.mainnet-beta.solana.com"
-        : "https://api.devnet.solana.com";
-    const connection = new Connection(rpcUrl, "confirmed");
+    let connection;
+    if (network === "mainnet") {
+      const RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || ""; // your HTTPS endpoint from Chainstack
+      const username = process.env.NEXT_PUBLIC_SOLANA_RPC_USERNAME;
+      const password = process.env.NEXT_PUBLIC_SOLANA_RPC_PASSWORD;
+      const auth = btoa(`${username}:${password}`);
+      connection = new Connection(RPC_URL, {
+        httpHeaders: {
+          Authorization: `Basic ${auth}`,
+        },
+      });
+    } else {
+      const rpcUrl = "https://api.devnet.solana.com";
+      connection = new Connection(rpcUrl, "confirmed");
+    }
 
     // const txBuffer = Buffer.from(signedTx, "base64");
     const binaryString = atob(signedTx);

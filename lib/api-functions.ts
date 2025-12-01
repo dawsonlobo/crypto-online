@@ -225,7 +225,7 @@ export async function loadWallets(userId: string): Promise<Wallet[]> {
       user_id: userId,
       crypto_type: "SOL",
       network: "Mainnet",
-      public_address: "6ugkjdYgaESssyDcabThvs4BZ94X8QeXVsvondR4zKP9",
+      public_address: "51ARLLahW5ofAewUGtNRQk5v62QJmDJ7ovjGVUnWkvWp",
       wallet_name: "Main SOL Wallet",
       created_at: new Date().toISOString(),
     },
@@ -327,7 +327,7 @@ export async function generateTransactionQRData(
   // Different cryptocurrencies have different URI schemes
   switch (cryptoType.toLowerCase()) {
     case "sol":
-      return JSON.stringify(await generateTransactionOnline(sendAddress, receiveAddress, amount));
+      return await generateTransactionOnline(sendAddress, receiveAddress, amount);
     // case "btc":
     //   return `bitcoin:${address}?amount=${amount}`;
     // case "eth":
