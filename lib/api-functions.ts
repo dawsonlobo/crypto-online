@@ -321,13 +321,14 @@ export async function generateTransactionQRData(
   cryptoType: string,
   sendAddress: string,
   receiveAddress: string,
-  amount: number
+  amount: number,
+  network: Network
 ) {
   // dawson-edit: Implement proper QR code format
   // Different cryptocurrencies have different URI schemes
   switch (cryptoType.toLowerCase()) {
     case "sol":
-      return await generateTransactionOnline(sendAddress, receiveAddress, amount);
+      return await generateTransactionOnline(sendAddress, receiveAddress, amount, network);
     // case "btc":
     //   return `bitcoin:${address}?amount=${amount}`;
     // case "eth":

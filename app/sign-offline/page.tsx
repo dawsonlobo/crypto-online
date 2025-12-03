@@ -225,7 +225,8 @@ export default function SignOfflinePage() {
         wallet.crypto_type,
         wallet.public_address,
         sendingAddress,
-        parseFloat(sendAmount)
+        parseFloat(sendAmount),
+        network
       );
       setTransactionData(transactionData);
     } catch (error) {

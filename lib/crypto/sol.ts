@@ -43,31 +43,42 @@ export async function getBalance(publicAddress: string, network: Network) {
 export async function generateTransactionOnline(
   senderAddress: string,
   receiverAddress: string,
-  amount: number
+  amount: number,
+  network: Network
 ) {
   try {
-    const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+    let connection;
 
+    if (network === "mainnet") {
+      const RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || ""; // your HTTPS endpoint from Chainstack
+      const username = process.env.NEXT_PUBLIC_SOLANA_RPC_USERNAME;
+      const password = process.env.NEXT_PUBLIC_SOLANA_RPC_PASSWORD;
+      const auth = btoa(`${username}:${password}`);
+      connection = new Connection(RPC_URL, {
+        httpHeaders: {
+          Authorization: `Basic ${auth}`,
+        },
+      });
+    } else {
+      // Connect to Solana Devnet
+      connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+    }
     // Step 1: Fetch recent blockhash
     const { blockhash } = await connection.getLatestBlockhash();
+
+    console.log("network")
+    console.log(network)
+    console.log("blockhash")
+    console.log(blockhash)
 
     if (!blockhash) {
       throw new Error("Failed to fetch blockhash");
     }
 
-    console.log({
-      senderAddress,
-      receiverAddress,
-      amount,
-      expiry: 1000,
-      blockhash,
-    });
 
     const response = `${senderAddress?.slice(0, 5)}_${senderAddress?.slice(
       -5
     )},${receiverAddress},${amount},${1000},${blockhash}`;
-    console.log("response?.length");
-    console.log(response?.length);
 
     return response;
   } catch (error) {
@@ -102,7 +113,6 @@ export async function uploadTransaction(signedTx: string, network: Network) {
 
     // sendRawTransaction
     const signature = await connection.sendRawTransaction(txBuffer);
-    console.log("Transaction submitted. Signature:", signature);
 
     // Optionally wait for confirmation
     const conf = await connection.confirmTransaction(signature, "confirmed");
@@ -135,7 +145,6 @@ export async function convertSolToFiat(
     const data = await res.json();
 
     const sol = data.find((a: { symbol: string }) => a.symbol === "SOLUSDT");
-    console.log(sol);
 
     if (isNaN(Number(sol?.price)) || sol?.price <= 0) {
       // error
