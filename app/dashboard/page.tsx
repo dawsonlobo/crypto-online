@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Sidebar } from "@/components/Sidebar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,7 +23,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
 } from "recharts";
 import { getPortfolioAllocation, getPortfolioHistory } from "@/lib/api-functions";
 import { TrendingUp, Wallet as WalletIcon, ArrowUpRight } from "lucide-react";
@@ -41,6 +39,7 @@ export default function DashboardPage() {
   const [allocationData, setAllocationData] = useState<any[]>([]);
   const [historyData, setHistoryData] = useState<any[]>([]);
   const [totalValue, setTotalValue] = useState(0);
+  // const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     checkUser();
@@ -103,11 +102,9 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
+<div className="flex flex-col md:flex-row h-screen bg-gray-50">
 
-      <main className="flex-1 p-8 overflow-auto">
-        <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto w-full">
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
             <p className="text-gray-600 mt-1">
@@ -314,7 +311,7 @@ export default function DashboardPage() {
             </div>
           </Card>
         </div>
-      </main>
+      {/* </main> */}
     </div>
   );
 }

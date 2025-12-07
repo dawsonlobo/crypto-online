@@ -1,8 +1,10 @@
+
 import "./globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/toaster";
 import { NetworkProvider } from "@/contexts/NetworkContext";
+import ClientLayout from "./client-layout";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,10 +21,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <NetworkProvider>
-          {children}
-          <Toaster />
-        </NetworkProvider>
+
+          
+          <NetworkProvider>
+            <Toaster />
+                      <ClientLayout>{children}</ClientLayout>
+          </NetworkProvider>
       </body>
     </html>
   );

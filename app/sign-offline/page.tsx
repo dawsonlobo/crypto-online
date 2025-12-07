@@ -4,17 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
-import {
-  QrCode,
-  Camera,
-  CheckCircle,
-  X,
-  RefreshCw,
-  AlertCircle,
-  AlertTriangle,
-} from "lucide-react";
+import { QrCode, Camera, CheckCircle, X, RefreshCw } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -191,11 +182,10 @@ export default function SignOfflinePage() {
       setLoading(false);
     }
   };
-      const { network } = useNetwork();
+  const { network } = useNetwork();
 
   // dawson-edit: Replace with actual balance fetching
   const updateBalance = async () => {
-    
     const wallet = wallets.find((w) => w.id === selectedWallet);
     if (!wallet) return;
 
@@ -372,20 +362,18 @@ export default function SignOfflinePage() {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-
       <main className="flex-1 p-8 overflow-auto">
         {alertM.show && (
-  <div className="fixed top-4 right-4 z-50 w-80 animate-in fade-in slide-in-from-top-2">
-    <Alert
-      variant={alertM.type}
-      className="bg-white text-gray-900 border-gray-200 shadow-lg"
-    >
-      <AlertTitle>{alertM.title}</AlertTitle>
-      <AlertDescription>{alertM.message}</AlertDescription>
-    </Alert>
-  </div>
-)}
+          <div className="fixed top-4 right-4 z-50 w-80 animate-in fade-in slide-in-from-top-2">
+            <Alert
+              variant={alertM.type}
+              className="bg-white text-gray-900 border-gray-200 shadow-lg"
+            >
+              <AlertTitle>{alertM.title}</AlertTitle>
+              <AlertDescription>{alertM.message}</AlertDescription>
+            </Alert>
+          </div>
+        )}
         <Card className="max-w-2xl mx-auto p-8 shadow-sm rounded-2xl">
           <h2 className="text-3xl font-semibold text-gray-900 mb-8">
             Sign Offline

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+  "dev": "next dev -H 0.0.0.0 -p 80 --experimental-https --experimental-https-cert \"C:/Users/tuf/Documents/dawson/personal/crypto-online/10.185.21.126+2.pem\" --experimental-https-key \"C:/Users/tuf/Documents/dawson/personal/crypto-online/10.185.21.126+2-key.pem\"",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

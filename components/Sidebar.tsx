@@ -10,13 +10,20 @@ import {
   FileText,
   LogOut,
   CreditCard,
+  X,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 // import network context
 import { useNetwork } from "@/contexts/NetworkContext";
 
-export function Sidebar() {
+export function Sidebar({
+  isOpen,
+  setIsOpen,
+}: {
+  isOpen: boolean;
+  setIsOpen: (v: boolean) => void;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
@@ -41,12 +48,24 @@ export function Sidebar() {
   ];
 
   return (
-    <aside className="w-64 bg-gray-100 border-r border-gray-200 p-4 flex flex-col h-screen">
+    <aside
+      className={`
+    w-64 bg-gray-100 border-r border-gray-200 p-4 flex flex-col
+    fixed md:static inset-y-0 left-0 z-40
+    transform transition-transform duration-300
+    ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+  `}
+    >
+      <button
+        onClick={() => setIsOpen(false)}
+        className="md:hidden absolute top-4 right-4 p-2 rounded-lg bg-gray-200 hover:bg-gray-300"
+      >
+        <X className="w-5 h-5" />
+      </button>
       <div className="flex items-center gap-2 mb-8 px-2">
         <Wallet className="w-6 h-6 text-gray-700" />
         <h1 className="text-xl font-semibold text-gray-800">Crypto Wallet</h1>
       </div>
-
       <nav className="flex-1 space-y-2">
         {menuItems.map((item) => {
           const Icon = item.icon;
@@ -68,7 +87,6 @@ export function Sidebar() {
           );
         })}
       </nav>
-
       {/* --- Network Toggle Start --- */}
       <div className="px-2 mb-4">
         <p className="text-sm font-medium mb-2 text-gray-700">Network</p>
@@ -95,7 +113,6 @@ export function Sidebar() {
         </div>
       </div>
       {/* --- Network Toggle End --- */}
-
       <Button
         variant="ghost"
         className="w-full justify-start text-gray-700 hover:bg-gray-200 mt-auto"

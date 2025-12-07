@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Sidebar } from "@/components/Sidebar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +22,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { loadWallets, getAvailableBalance, validateCryptoAddress } from "@/lib/api-functions";
+import { loadWallets, validateCryptoAddress } from "@/lib/api-functions";
 import { Plus, Wallet as WalletIcon, Trash2, Copy, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Wallet } from "@/lib/api-functions";
@@ -214,7 +213,6 @@ export default function WalletsPage() {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar />
 
       <main className="flex-1 p-8 overflow-auto">
         <div className="max-w-7xl mx-auto">

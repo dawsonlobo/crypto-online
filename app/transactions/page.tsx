@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Sidebar } from "@/components/Sidebar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -93,7 +92,6 @@ export default function TransactionsPage() {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar />
 
       <main className="flex-1 p-8 overflow-auto">
         <div className="max-w-7xl mx-auto">
